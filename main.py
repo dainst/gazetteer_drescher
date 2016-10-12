@@ -8,16 +8,18 @@ logging.basicConfig(format="%(asctime)s-%(levelname)s-%(name)s - %(message)s")
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+def printHelp():
+  logger.info("Usage: python <format type> <output file>")
+  logger.info("Possible format types:")
+  counter = 0
+
+  for k, v in config.existingFormats.items():
+    logger.info(" {0} ({1})".format(k, v["description"]))
+
 if __name__ == "__main__":
 
   if(len(sys.argv) != 3):
-    logger.info("Usage: python <format type> <output file>")
-    logger.info("Possible format types:")
-    counter = 0
-
-    for k, v in config.existingFormats.items():
-      logger.info(" {0} ({1})".format(k, v["description"]))
-
+    printHelp()
     sys.exit()
 
   requestInfo = {
@@ -25,4 +27,9 @@ if __name__ == "__main__":
     "output_path": sys.argv[2]
     }
 
-  harvesting.start(requestInfo)
+  if(requestInfo["format"] in config.existingFormats):
+    harvesting.start(requestInfo)
+  else:
+    logger.info("Unknown format: " + requestInfo["format"] + "\n")
+    printHelp()
+    sys.exit()
