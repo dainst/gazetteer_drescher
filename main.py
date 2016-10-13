@@ -17,7 +17,7 @@ def printHelp():
 
 if __name__ == "__main__":
 
-  if(len(sys.argv) != 3):
+  if(len(sys.argv) != 3 or sys.argv[1] == "-h"):
     printHelp()
     sys.exit()
 
