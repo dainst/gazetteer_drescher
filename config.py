@@ -1,11 +1,11 @@
 existingFormats = {
   "marc": {
     "description": "Standard MARC21 Format for Bibliographic Data, ISO2709.",
-    "output_script": "marc"
+    "module": "output.marc"
   },
   "marcxml": {
     "description": "MARC21 data provided as XML.",
-    "output_script": "marcxml"
+    "module": "output.marcxml"
   }
 }
 

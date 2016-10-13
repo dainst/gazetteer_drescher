@@ -3,14 +3,14 @@ import logging
 import config
 import json
 import urllib2
-import output.marc as output
+import importlib
 
 logging.basicConfig(format='%(asctime)s-%(levelname)s-%(name)s - %(message)s')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 def start(requestInfo):
-
+  output = getOutputModule(requestInfo["format"])
   query = (config.gazetteerBaseURL + "search?limit="
     + str(config.batchSize) + "&offset=0&q=*")
 
@@ -46,3 +46,6 @@ def getBatchDetails(batch):
 def runQuery(q):
   req = urllib2.Request(q, headers = {"Accept" : "application/json"})
   return json.loads(urllib2.urlopen(req).read())
+
+def getOutputModule(reqFormat):
+  return importlib.import_module(config.existingFormats[reqFormat]["module"])
