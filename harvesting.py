@@ -1,9 +1,12 @@
 import sys
-import logging
 import config
 import json
 import urllib2
 import importlib
+
+import logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 def start(requestInfo):
   output = getOutputModule(requestInfo["format"])
