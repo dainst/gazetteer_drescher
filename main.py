@@ -4,8 +4,8 @@ import logging
 import config
 import harvesting
 
-logging.basicConfig(format="%(asctime)s-%(levelname)s-%(name)s - %(message)s")
 logger = logging.getLogger(__name__)
+logging.basicConfig(format="%(levelname)s - %(message)s")
 logger.setLevel(logging.INFO)
 
 def printHelp():

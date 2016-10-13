@@ -5,10 +5,6 @@ import json
 import urllib2
 import importlib
 
-logging.basicConfig(format='%(asctime)s-%(levelname)s-%(name)s - %(message)s')
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
 def start(requestInfo):
   output = getOutputModule(requestInfo["format"])
   query = (config.gazetteerBaseURL + "search?limit="
