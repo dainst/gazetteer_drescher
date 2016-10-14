@@ -21,8 +21,11 @@ def start(requestInfo):
   if(config.limitResults != 0):
     total = config.limitResults
 
+
+  out = open(requestInfo["output_path"], "w")
+  
   logger.info("Processing first batch...")
-  output.writeBatchToFile(getBatchDetails(firstBatch), requestInfo)
+  output.writeBatchToFile(getBatchDetails(firstBatch), requestInfo, out)
 
   infoCounter = 2
   infoBatchCount = int(math.ceil(float(total) / float(config.batchSize)))
@@ -31,9 +34,12 @@ def start(requestInfo):
     logger.info("Processing batch " + str(infoCounter)
       + " of " + str(infoBatchCount) + "...")
     batch = getBatchDetails(getNextBatch(counter))
-    output.writeBatchToFile(batch, requestInfo)
+    output.writeBatchToFile(batch, requestInfo, out)
     counter += config.batchSize
     infoCounter += 1
+
+
+  out.close()
 
 def getNextBatch(counter):
   query = (config.gazetteerBaseURL + "search?limit="
@@ -60,4 +66,4 @@ def runQuery(q):
 
 
 def getOutputModule(reqFormat):
-  return importlib.import_module(config.existingFormats[reqFormat]["module"])
+  return importlib.import_module(config.formats[reqFormat]["module"])

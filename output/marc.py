@@ -7,18 +7,25 @@ from pymarc import Record, Field
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 import harvesting
 
-def writeBatchToFile(batch, requestInfo):
-  out = open(requestInfo["output_path"], "w")
-  for item in batch:
+cachedPlaces = {}
 
-    # logger.debug("New location")
-    # for key, value in item.items():
-    #  if key not in ["prefLocation"]:
-    #      logger.debug(str(key) + ": " + str(value))
+def writeBatchToFile(batch, requestInfo, out):
+  for place in batch:
+    if("prefName" not in place):
+      logger.info("Skipping place:")
+      logger.info(place)
+      continue;
+
+    cachePlace(place)
+
+    # logger.debug("Location:")
+    # for(key, value in item.items()):
+    #   if(key not in ["prefLocation"]):
+    #     logger.debug(str(key) + ": " + str(value))
 
     record = Record(to_unicode=True, force_utf8=True)
     record.add_field(
@@ -26,7 +33,7 @@ def writeBatchToFile(batch, requestInfo):
         tag = "151",
         indicators = [" ", " "],
         subfields = [
-          "a", item["prefName"]["title"],
+          "a", place["prefName"]["title"],
         ]),
       Field(
         tag = "40",
@@ -38,16 +45,16 @@ def writeBatchToFile(batch, requestInfo):
         tag = "24",
         indicators = [" ", " "],
         subfields = [
-          "a", item["gazId"],
+          "a", place["gazId"],
           "2", "iDAI.gazetteer"
         ])
       )
 
-    if "parent" in item:
-      record = addParentTracing(record, item["parent"], [item["prefName"]["title"]])
+    if "parent" in place:
+      record = addParentTracing(record, place["parent"], [place["prefName"]["title"]])
 
-    if "names" in item:
-      record = addGeoTracing(record, item["names"], [item["prefName"]["title"]])
+    if "names" in place:
+      record = addGeoTracing(record, place["names"], [place["prefName"]["title"]])
 
     record = customizeLeader(record)
     # logger.debug("Final marc21 record: ")
@@ -55,12 +62,21 @@ def writeBatchToFile(batch, requestInfo):
 
     out.write(record.as_marc())
 
-  out.close()
 
 def addParentTracing(record, parentURL, knownParents):
-  parent = harvesting.runQuery(parentURL)
+  parent = None
 
-  if(parent == None or parent["prefName"]["title"] in knownParents):
+  if(parentURL in cachedPlaces):
+    parent = cachedPlaces[parentURL]
+    logger.debug("Using cached place: " + parent["prefName"]["title"])
+  else:
+    parent = harvesting.runQuery(parentURL)
+    if(parent == None):
+      return record
+
+    cachePlace(parent)
+
+  if(parent["prefName"]["title"] in knownParents):
     return record
 
   record.add_field(
@@ -103,9 +119,22 @@ def addGeoTracing(record, alternativeNames, knownNames):
 # https://www.loc.gov/marc/authority/adleader.html
 def customizeLeader(record):
   record.leader = (record.leader[0:5]
-    + config.existingFormats["marc"]["options"]["record status"]
+    + config.formats["marc"]["options"]["record status"]
     + "z" + record.leader[7:17] + "n" + record.leader[18:])
 
   # logger.debug("Final leader: " + record.leader + ", length: "
   #   + str(len(record.leader)))
   return record
+
+def cachePlace(place):
+  if(place["@id"] in cachedPlaces):
+    return
+  elif(place["gazId"] == "2042600"):
+    cachedPlaces[place["@id"]] = place
+    # logger.debug("Cached place " + place["prefName"]["title"])
+  elif("types" in place
+    and place["types"][0] in config.formats["marc"]["options"]["cached types"]):
+    cachedPlaces[place["@id"]] = place
+    # logger.debug("Cached place " + place["prefName"]["title"])
+  else:
+    return

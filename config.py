@@ -1,9 +1,10 @@
-existingFormats = {
+formats = {
   "marc": {
     "description": "Standard MARC21 Format for Bibliographic Data, ISO2709.",
     "module": "output.marc",
     "options": {
-      "record status": "n" # see https://www.loc.gov/marc/authority/adleader.html
+      "record status": "n", # see https://www.loc.gov/marc/authority/adleader.html
+      "cached types": ["continent", "administrative-unit"]
     }
   },
   "marcxml": {
@@ -13,5 +14,5 @@ existingFormats = {
 }
 
 gazetteerBaseURL = "https://gazetteer.dainst.org/"
-batchSize = 10
-limitResults = 1000
+batchSize = 2500
+limitResults = 0
