@@ -85,7 +85,7 @@ def addParentTracing(record, parentURL, knownParents):
       indicators = [" ", " "],
       subfields = [
         "a", parent["prefName"]["title"],
-        "i", "teil von"
+        "i", "part of"
       ])
     )
 
