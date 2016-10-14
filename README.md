@@ -15,12 +15,18 @@ The script `config.py` can be used for basic configuration and to include additi
 
 Each output record is a flagged as an authority record. All fields and subfields listed represent authority record fields/subfields.
 
-| MARC21 Field | MARC21 Subfield | Values: Either single JSON record harvested from Gazetteer as `place` or static strings. |
-| --- | --- | --- |
-| 40  | ## a | "iDAI.gazetteer" |
-| 24  | ## a | `place["gazId"]` |
-| 24  | ## 2 | "iDAI.gazetteer" |
-| 151 | ## a | `place["prefName"]["title"]` |
-| 451 | ## a | for each additional entry in `place["names"]`: `name["prefName"]["title"]` |
-| 551 | ## a | for each of `place`'s ancestors: `ancestor["prefName"]["title"]` |
-| 551 | ## i | "part of" |
+Assigned values are taken either from individual JSON records (`place`) provided by the Gazetteer or static strings.
+
+_040 ## a_: "iDAI.gazetteer"
+
+_024 ## a_: `place["gazId"]`
+
+_024 ## 2_: "iDAI.gazetteer"
+
+_151 ## a_: `place["prefName"]["title"]`
+
+_451 ## a_: for each additional entry in `place["names"]`: `name["prefName"]["title"]`
+
+_551 ## a_: for each of `place`'s ancestors: `ancestor["prefName"]["title"]`
+
+_551 ## i_: "part of"
