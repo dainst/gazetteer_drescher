@@ -3,6 +3,7 @@ import config
 import json
 import urllib2
 import importlib
+import math
 
 import logging
 logger = logging.getLogger(__name__)
@@ -20,13 +21,19 @@ def start(requestInfo):
   if(config.limitResults != 0):
     total = config.limitResults
 
+  logger.info("Processing first batch...")
   output.writeBatchToFile(getBatchDetails(firstBatch), requestInfo)
 
+  infoCounter = 2
+  infoBatchCount = int(math.ceil(float(total) / float(config.batchSize)))
   counter = config.batchSize
   while counter < total:
+    logger.info("Processing batch " + str(infoCounter)
+      + " of " + str(infoBatchCount) + "...")
     batch = getBatchDetails(getNextBatch(counter))
     output.writeBatchToFile(batch, requestInfo)
     counter += config.batchSize
+    infoCounter += 1
 
 def getNextBatch(counter):
   query = (config.gazetteerBaseURL + "search?limit="
@@ -43,8 +50,14 @@ def getBatchDetails(batch):
   return detailedResults
 
 def runQuery(q):
-  req = urllib2.Request(q, headers = {"Accept" : "application/json"})
-  return json.loads(urllib2.urlopen(req).read())
+  try:
+    req = urllib2.Request(q, headers = {"Accept" : "application/json"})
+    return json.loads(urllib2.urlopen(req).read())
+  except urllib2.HTTPError, e:
+    logger.error("HTTPError for query, response was:")
+    logger.error(e.fp.read())
+    return None
+
 
 def getOutputModule(reqFormat):
   return importlib.import_module(config.existingFormats[reqFormat]["module"])

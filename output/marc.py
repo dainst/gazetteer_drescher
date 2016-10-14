@@ -4,19 +4,21 @@ import config
 import json
 
 from pymarc import Record, Field
-from pymarc.constants import LEADER_LEN
-
 import logging
+
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
+
+import harvesting
 
 def writeBatchToFile(batch, requestInfo):
   out = open(requestInfo["output_path"], "w")
   for item in batch:
-    print "\n"
-    #for key, value in item.items():
+
+    # logger.debug("New location")
+    # for key, value in item.items():
     #  if key not in ["prefLocation"]:
-    #      logger.info(str(key) + ": " + str(value))
+    #      logger.debug(str(key) + ": " + str(value))
 
     record = Record(to_unicode=True, force_utf8=True)
     record.add_field(
@@ -41,31 +43,69 @@ def writeBatchToFile(batch, requestInfo):
         ])
       )
 
+    if "parent" in item:
+      record = addParentTracing(record, item["parent"], [item["prefName"]["title"]])
+
     if "names" in item:
-      for altName in item["names"]:
-        record = addGeoTracing(record, altName["title"])
+      record = addGeoTracing(record, item["names"], [item["prefName"]["title"]])
 
-    recordLength = str(len(record.as_marc()))
-    counter = len(recordLength)
-    while counter < 4:
-      recordLength = "0" + recordLength
-      counter += 1
-
-    record.leader = (recordLength + "c" + "z"
-      + record.leader[7:LEADER_LEN])
+    record = customizeLeader(record)
+    # logger.debug("Final marc21 record: ")
+    # logger.debug(record.as_marc())
 
     out.write(record.as_marc())
 
   out.close()
 
-def addGeoTracing(record, data):
+def addParentTracing(record, parentURL, knownParents):
+  parent = harvesting.runQuery(parentURL)
+
+  if(parent == None or parent["prefName"]["title"] in knownParents):
+    return record
+
   record.add_field(
     Field(
-      tag = "451",
+      tag = "551",
       indicators = [" ", " "],
       subfields = [
-        "a", data
-      ]
+        "a", parent["prefName"]["title"],
+        "i", "teil von"
+      ])
     )
-  )
+
+  knownParents.append(parent["prefName"]["title"])
+
+  if("parent" not in parent):
+    return record # reached root https://gazetteer.dainst.org/place/2042600
+  else:
+    return addParentTracing(record, parent["parent"], knownParents)
+
+def addGeoTracing(record, alternativeNames, knownNames):
+  for altName in alternativeNames:
+    if(altName["title"] not in knownNames):
+      record.add_field(
+        Field(
+          tag = "451",
+          indicators = [" ", " "],
+          subfields = [
+            "a", altName["title"]
+          ])
+      )
+      knownNames.append(altName["title"])
+
+  return record
+
+
+# The leader encodes meta information about the marc record
+# This functions sets some flags that can not be inferred automatically
+# by the pymarc library:
+# 'Record status', 'Type of record' and the 'Encoding level', see also
+# https://www.loc.gov/marc/authority/adleader.html
+def customizeLeader(record):
+  record.leader = (record.leader[0:5]
+    + config.existingFormats["marc"]["options"]["record status"]
+    + "z" + record.leader[7:17] + "n" + record.leader[18:])
+
+  # logger.debug("Final leader: " + record.leader + ", length: "
+  #   + str(len(record.leader)))
   return record
