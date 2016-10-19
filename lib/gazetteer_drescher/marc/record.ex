@@ -22,7 +22,7 @@ defmodule GazetteerDrescher.MARC.Record do
 
     base_address = 24 + String.length(directory)
 
-    record_length = base_address + String.length(final_fields) + 1
+    record_length = base_address + byte_size(final_fields) + 1 # +1 for << 29 >>
     |> to_string
     |> String.pad_leading(5, "0")
 
