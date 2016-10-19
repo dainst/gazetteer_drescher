@@ -11,7 +11,8 @@ config :gazetteer_drescher,
       default_target_file: "./output/gazetteer.marc"
     }
   ],
-  gazetteer_base_url: "https://gazetteer.dainst.org"
+  gazetteer_base_url: "https://gazetteer.dainst.org",
+  cached_place_types: ["continent", "administrative-unit"]
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this
 # file won't be loaded nor affect the parent project. For this reason,

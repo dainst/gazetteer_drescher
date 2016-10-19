@@ -1,5 +1,7 @@
 defmodule GazetteerDrescher.Writing do
 
+  alias GazetteerDrescher.MARC
+
   def open_output_file(file) do
     file
     |> Path.dirname
@@ -10,6 +12,9 @@ defmodule GazetteerDrescher.Writing do
   end
 
   def write_place({:ok, place}, :marc, file_pid) do
-    IO.write( file_pid, place["@id"])
+    marc = place
+    |> MARC.create_output
+
+    IO.write( file_pid, marc )
   end
 end

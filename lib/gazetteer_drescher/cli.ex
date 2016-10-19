@@ -53,6 +53,12 @@ defmodule GazetteerDrescher.CLI do
       {requested_type, file_pid}
     end, name: RequestInfo)
 
+    :ets.new(:cached_places, [:named_table, :public])
+    # To much data for Agent module, fallback to ETS table
+    # Agent.start(fn ->
+    #   HashDict.new
+    # end, name: CachedPlaces)
+
     GazetteerDrescher.Harvesting.start(@default_batch_size)
 
     Logger.info "Done."

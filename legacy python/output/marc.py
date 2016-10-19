@@ -43,7 +43,7 @@ def writeBatchToFile(batch, requestInfo, out):
         ]),
       Field(
         tag = "24",
-        indicators = [" ", " "],
+        indicators = ["7", " "],
         subfields = [
           "a", place["gazId"],
           "2", "iDAI.gazetteer"

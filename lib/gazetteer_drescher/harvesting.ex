@@ -3,6 +3,7 @@ defmodule GazetteerDrescher.Harvesting do
   import GazetteerDrescher.Writing, only: [write_place: 3]
   @user_agent [{"User-agent", "Elixir GazetteerDrescher"}]
   @gazetteer_base_url Application.get_env(:gazetteer_drescher, :gazetteer_base_url)
+  @cache_config Application.get_env(:gazetteer_drescher, :cached_place_types)
 
   def start(batchSize) do
     query = "#{@gazetteer_base_url}/search?limit=#{batchSize}&offset=0&q=*"
@@ -47,8 +48,15 @@ defmodule GazetteerDrescher.Harvesting do
     |> Stream.map(&Task.async(fn -> start_query(&1) end ))
     |> Stream.map(&Task.await(&1, 10000))
     |> Stream.map(&handle_response(&1))
+    |> Stream.map(&add_to_cache(&1))
     |> Enum.map(&write_place(&1, output_type, output_file))
 
+  end
+
+  def fetch_place(url) do
+    url
+    |> start_query
+    |> handle_response
   end
 
   defp handle_response({ :ok, %HTTPoison.Response{ status_code: 200, body: body} } ) do
@@ -59,24 +67,26 @@ defmodule GazetteerDrescher.Harvesting do
       status_code: 404,
       body: body,
       headers: headers} } ) do
-    Logger.error "Error code 404 in response."
-    Logger.error "Headers:"
-    IO.inspect headers
-    Logger.error "Body:"
-    IO.inspect body
-
     { :error, 404 }
+  end
+
+  defp handle_response({:ok, %HTTPoison.Response{
+      status_code: 403,
+      body: body,
+      headers: headers} } ) do
+    { :error, 403 }
   end
 
   defp handle_response({ :ok, %HTTPoison.Response{
       status_code: 500,
       body: body,
       headers: headers} } ) do
-    Logger.error "Error code 500 in response."
+    Logger.error "Status code 500 in response."
     Logger.error "Headers:"
-    IO.inspect headers
+    Logger.error  headers
     Logger.error "Body:"
-    IO.inspect body
+    Logger.error  body
+    Logger.error "Stopping script..."
 
     System.halt(0)
   end
@@ -91,5 +101,31 @@ defmodule GazetteerDrescher.Harvesting do
   defp start_query(url) do
     url
     |> HTTPoison.get([{"Accept", "application/json"}], [recv_timeout: :infinity])
+  end
+
+  defp add_to_cache({:ok, place}) do
+
+    if Map.has_key?(place, "types") do
+      add? = place["types"]
+      |> Enum.map(&Enum.member?(@cache_config, &1))
+      |> Enum.any?
+
+      if add? == true do
+        :ets.insert(:cached_places, {place["@id"], place})
+        # Agent.update(CachedPlaces,
+        #   &Dict.put(&1, place["@id"], place, 20000)
+        # )
+      end
+    end
+
+    # Also add "Welt" (world), the overall root.
+    if place["gazId"] == "2042600" do
+      # :ets.insert(:cached_places, { place["@id"], "test"})
+      :ets.insert(:cached_places, { place["@id"], place })
+    end
+
+
+    {:ok, place}
+
   end
 end
