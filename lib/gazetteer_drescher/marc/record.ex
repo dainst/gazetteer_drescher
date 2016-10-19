@@ -30,16 +30,16 @@ defmodule GazetteerDrescher.MARC.Record do
     |> to_string
     |> String.pad_leading(5, "0")
 
-    leader = "#{record_length}nz  a22#{base_address}n  4550"
+    leader = "#{record_length}nz##a22#{base_address}n##4500"
     leader <> directory <> final_fields <> << 29 >>
   end
 
   def create_dictionary({tag, length}, {result, offset}) do
     adjusted_tag = String.pad_leading(to_string(tag), 3, "0")
-    adjusted_offset = String.pad_leading(to_string(offset), 4, "0")
-    adjusted_length = String.pad_leading(to_string(length), 5, "0")
+    adjusted_offset = String.pad_leading(to_string(offset), 5, "0")
+    adjusted_length = String.pad_leading(to_string(length), 4, "0")
 
-    { result <> adjusted_tag <> adjusted_offset <> adjusted_length, offset + length }
+    { result <> adjusted_tag <> adjusted_length <> adjusted_offset, offset + length }
   end
 
   def finalize_fields({_tag, content}, result) do
