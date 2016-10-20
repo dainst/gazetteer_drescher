@@ -12,7 +12,7 @@ defmodule GazetteerDrescher.MARC.Record do
     processed_fields = Enum.map(record.fields, &Field.to_marc(&1))
 
     { directory, _ } = processed_fields
-    |> Enum.map(fn({tag, content}) -> { tag, String.length(content)} end )
+    |> Enum.map(fn({tag, content}) -> { tag, byte_size(content)} end )
     |> Enum.reduce({"", 0}, &create_dictionary/2)
 
     final_fields = processed_fields
