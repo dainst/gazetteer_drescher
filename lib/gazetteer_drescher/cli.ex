@@ -10,7 +10,7 @@ defmodule GazetteerDrescher.CLI do
     argv
     |> parse_args
     |> validate_request
-    # |> start_harvesting
+    |> start_harvesting
 
   end
 
