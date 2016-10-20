@@ -17,7 +17,7 @@ defmodule GazetteerDrescher.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     [
-      applications: [:logger, :httpoison, :poison]
+      applications: [:logger, :httpoison, :poison, :timex ]
       # mod: {GazetteerDrescher, []}
     ]
   end
@@ -38,7 +38,8 @@ defmodule GazetteerDrescher.Mixfile do
   defp deps do
     [
       {:httpoison, "~> 0.9.0"},
-      {:poison, "~> 3.0"}
+      {:poison, "~> 3.0"},
+      {:timex, "~> 3.0"}
     ]
   end
 end

@@ -6,8 +6,8 @@ defmodule GazetteerDrescher.Harvesting do
   @cache_config Application.get_env(:gazetteer_drescher, :cached_place_types)
   @batch_limit Application.get_env(:gazetteer_drescher, :batch_limit)
 
-  def start(batch_size) do
-    query = "#{@gazetteer_base_url}/search?limit=#{batch_size}&offset=0&q=*"
+  def start(q, batch_size) do
+    query = "#{@gazetteer_base_url}/search?limit=#{batch_size}&offset=0&#{q}"
 
     Logger.info "Fetching first batch: #{query}"
     {:ok, response} =
@@ -44,7 +44,7 @@ defmodule GazetteerDrescher.Harvesting do
   end
 
   defp fetch_places({:ok, body}) do
-    { output_type, output_file } = Agent.get(RequestInfo, &(&1))
+    { output_type, output_file, _days_offset } = Agent.get(RequestInfo, &(&1))
 
     # use ~s sigil instead of double quotes to allow the use of double quotes in interpolation
     body["result"]
