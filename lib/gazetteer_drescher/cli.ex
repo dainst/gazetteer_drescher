@@ -29,8 +29,8 @@ defmodule GazetteerDrescher.CLI do
 
   defp parsed_args(argv) do
     {switches, argv, errors} = OptionParser.parse(argv,
-      switches: [ help: :boolean, type: :string, target_path: :string],
-      aliases:  [ h:    :help,    t: :target_path ]
+      switches: [ help: :boolean, format: :string, target_path: :string],
+      aliases:  [ h:    :help]
     )
 
     { Enum.into(switches, %{}), argv, errors }
@@ -65,13 +65,14 @@ defmodule GazetteerDrescher.CLI do
   end
 
   defp print_help() do
-    IO.puts "usage: mix run lib/gazetteer_drescher.ex --type <output_type>"
-    IO.puts "Possible output types: "
-    Enum.each @output_types, fn ({key, val}) ->
-      IO.puts "'#{key}': #{val[:description]}"
-    end
+    IO.puts "usage: mix run lib/gazetteer_drescher.ex --format <output_format> [options]"
     IO.puts ""
-    IO.puts "options: -t | --target_path <output path>"
+    IO.puts "Available output formats: "
+    Enum.each @output_types, fn ({key, val}) ->
+      IO.puts "  '#{key}': #{val[:description]}"
+    end
+    IO.puts "other options:"
+    IO.puts "  --target_path <output path>"
     System.halt(0)
   end
 end
