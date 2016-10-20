@@ -36,6 +36,7 @@ After having installed both Erlang and Elixir, check out the repository, switch 
 #### Options
 * `-h | --help` for usage information, including a list of all available `<formats>`.
 * `-t | --target <target path>` for specifying the desired output directory and file. This is _optional_: Each format defines a default directory and filename in `config/config.exs`.
+* `-d | --days <n days offset>`. This is _optional_: Only retrieve places that were added or changed in between now and the last n days specified by the offset.
 
 ## Format mapping information
 
