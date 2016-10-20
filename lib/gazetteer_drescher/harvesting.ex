@@ -4,9 +4,10 @@ defmodule GazetteerDrescher.Harvesting do
   @user_agent [{"User-agent", "Elixir GazetteerDrescher"}]
   @gazetteer_base_url Application.get_env(:gazetteer_drescher, :gazetteer_base_url)
   @cache_config Application.get_env(:gazetteer_drescher, :cached_place_types)
+  @batch_limit Application.get_env(:gazetteer_drescher, :batch_limit)
 
-  def start(batchSize) do
-    query = "#{@gazetteer_base_url}/search?limit=#{batchSize}&offset=0&q=*"
+  def start(batch_size) do
+    query = "#{@gazetteer_base_url}/search?limit=#{batch_size}&offset=0&q=*"
 
     Logger.info "Fetching first batch: #{query}"
     {:ok, response} =
@@ -15,20 +16,23 @@ defmodule GazetteerDrescher.Harvesting do
       |> handle_response
 
     total = response["total"]
+
     Logger.info "#{total} places overall."
 
     task_first_batch = Task.async fn ->
       fetch_places({:ok, response})
     end
 
-    Stream.unfold(batchSize, fn n when n >= total -> nil; n -> {n, n + batchSize} end)
+    Stream.unfold(batch_size, fn
+      n when n >= total -> nil;
+      n -> {n, n + batch_size}
+      end)
     |> Stream.map(fn(x) ->
-        url = "#{@gazetteer_base_url}/search?limit=#{batchSize}&offset#{x}"
+        url = "#{@gazetteer_base_url}/search?limit=#{batch_size}&offset#{x}&q=*"
         Logger.info "Fetching next batch: #{url}"
         url
        end)
-    |> Stream.map(&Task.async(fn -> start_query(&1) end ))
-    |> Stream.map(&Task.await(&1, :infinity))
+    |> Stream.map(&start_query(&1))
     |> Stream.map(&handle_response(&1))
     |> Enum.map(&Task.async(fn -> fetch_places(&1) end ))
     |> Enum.map(&Task.await(&1, :infinity))
@@ -46,7 +50,7 @@ defmodule GazetteerDrescher.Harvesting do
     body["result"]
     |> Stream.map(fn x -> ~s(#{@gazetteer_base_url}/doc/#{x["gazId"]}.json) end)
     |> Stream.map(&Task.async(fn -> start_query(&1) end ))
-    |> Stream.map(&Task.await(&1, 10000))
+    |> Stream.map(&Task.await(&1, :infinity))
     |> Stream.map(&handle_response(&1))
     |> Stream.map(&add_to_cache(&1))
     |> Enum.map(&write_place(&1, output_type, output_file))
@@ -65,15 +69,15 @@ defmodule GazetteerDrescher.Harvesting do
 
   defp handle_response({ :ok, %HTTPoison.Response{
       status_code: 404,
-      body: body,
-      headers: headers} } ) do
+      body: _body,
+      headers: _headers} } ) do
     { :error, 404 }
   end
 
   defp handle_response({:ok, %HTTPoison.Response{
       status_code: 403,
-      body: body,
-      headers: headers} } ) do
+      body: _body,
+      headers: _headers} } ) do
     { :error, 403 }
   end
 
