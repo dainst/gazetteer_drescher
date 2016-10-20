@@ -110,9 +110,10 @@ defmodule GazetteerDrescher.Harvesting do
   defp add_to_cache({:ok, place}) do
 
     if Map.has_key?(place, "types") do
-      add? = place["types"]
-      |> Enum.map(&Enum.member?(@cache_config, &1))
-      |> Enum.any?
+      add? =
+        place["types"]
+        |> Enum.map(&Enum.member?(@cache_config, &1))
+        |> Enum.any?
 
       if add? == true do
         :ets.insert(:cached_places, {place["@id"], place})

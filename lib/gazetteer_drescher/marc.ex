@@ -29,9 +29,10 @@ defmodule GazetteerDrescher.MARC do
         "a": place["prefName"]["title"]
       ]})
 
-    record = record
-    |> add_geo_tracing(place["names"], [place["prefName"]["title"]])
-    |> add_parent_tracing(place["parent"])
+    record =
+      record
+      |> add_geo_tracing(place["names"], [place["prefName"]["title"]])
+      |> add_parent_tracing(place["parent"])
 
     Record.to_marc(record)
   end

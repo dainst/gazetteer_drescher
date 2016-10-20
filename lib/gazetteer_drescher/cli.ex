@@ -33,9 +33,6 @@ defmodule GazetteerDrescher.CLI do
         switches: [ help: :boolean, format: :string, target: :string],
         aliases:  [ h:    :help, f: :format, t: :target]
       )
-      |> IO.inspect
-
-
     { Enum.into(switches, %{}), argv, errors }
   end
 

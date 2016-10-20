@@ -15,8 +15,9 @@ defmodule GazetteerDrescher.MARC.Field do
         value -> to_string(value)
       end
 
-    subfields_as_marc = field.subfields
-    |> subfields_to_marc("")
+    subfields_as_marc =
+      field.subfields
+      |> subfields_to_marc("")
 
     field_as_marc = i1 <> i2 <> subfields_as_marc <> << 30 >>
 
