@@ -19,8 +19,5 @@ erl_crash.dump
 # Ignore default drescher output folder
 /output
 
-# Ignore the executable generated be escript
-gazetteer_drescher
-
 # Legacy 
 *.pyc
