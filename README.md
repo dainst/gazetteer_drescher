@@ -1,13 +1,33 @@
 # gazetteer_drescher
-Script for harvesting the [iDAI.gazetteer](https://gazetteer.dainst.org/).
+Harvesting application for the [iDAI.gazetteer](https://gazetteer.dainst.org/),
+written in [Elixir](http://elixir-lang.org/)/[Erlang](http://www.erlang.org/).
 
-## Requirements
-* [pymark](https://github.com/edsu/pymarc) for generating MARC output.
+## Prerequisites
+Elixir runs in the Erlang Virtual Machine, so you will need to install both Erlang and Elixir
+
+1. For Erlang see either http://www.erlang.org/downloads or https://www.erlang-solutions.com/resources/download.html
+2. For Elixir see either http://elixir-lang.org/install.html or also https://www.erlang-solutions.com/resources/download.html
+
+Development so far was done by running `brew install erlang` and `brew install elixir` on Mac OS X or the `apt-get`-variants for Ubuntu/Debian.
+
+After having installed both Erlang and Elixir, check out the repository, switch to its root directory and run `mix deps.get`. [Mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) is Elixir's package manager/build tool and should download everything automatically, by reading the dependencies from  `mix.exs`.
+
 
 ## Usage
-Simply run `python <format type> <output file>`. For information about the supported types run `python -h`.
 
-The script `config.py` can be used for basic configuration and to include additional scripts for new output formats. These have to be added under `output/`.
+### Running the program
+There are two recommended alternatives for running the application:
+
+#### (1) Using Mix:
+In the root directory, run `mix run lib/gazetteer_drescher.exs [options]`. This is recommended for development.
+#### (2) Compilation using [escript](http://elixir-lang.org/docs/master/mix/Mix.Tasks.Escript.Build.html):
+In the root directory, run `mix escript.build`, which compiles the application into a single executable called `gazetteer_drescher`, which in turn can then run as `./gazetteer_drescher [options]`.
+
+### Options
+* `--format <output format>` defining the required ouput format.
+* `--output_path <target path>` for the desired output directory and file. Each format defines a default directory and file name in `config/config.exs`.
+
+Running the script without options will print usage information including all available formats.
 
 ## Format mapping information
 
