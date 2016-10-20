@@ -19,15 +19,13 @@ After having installed both Erlang and Elixir, check out the repository, switch 
 There are two recommended alternatives for running the application:
 
 #### (1) Using Mix:
-In the root directory, run `mix run lib/gazetteer_drescher.exs [options]`. This is recommended for development.
+In the root directory, run `mix run lib/gazetteer_drescher.exs <format> [options]`. This is recommended for development.
 #### (2) Compilation using [escript](http://elixir-lang.org/docs/master/mix/Mix.Tasks.Escript.Build.html):
-In the root directory, run `mix escript.build`, which compiles the application into a single executable called `gazetteer_drescher`, which in turn can then run as `./gazetteer_drescher [options]`.
+In the root directory, run `mix escript.build`, which compiles the application into a single executable called `gazetteer_drescher`, which in turn can then run as `./gazetteer_drescher <format> [options]`.
 
 ### Options
-* `--format <output format>` defining the required ouput format.
-* `--output_path <target path>` for the desired output directory and file. Each format defines a default directory and file name in `config/config.exs`.
-
-Running the script without options will print usage information including all available formats.
+* `-h | --help` for usage information, including a list of all available `<formats>`.
+* `-t | --target <target path>` for the desired output directory and file. Each format defines a default directory and file name in `config/config.exs`.
 
 ## Format mapping information
 

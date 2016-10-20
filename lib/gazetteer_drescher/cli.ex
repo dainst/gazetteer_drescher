@@ -10,7 +10,7 @@ defmodule GazetteerDrescher.CLI do
     argv
     |> parse_args
     |> validate_request
-    |> start_harvesting
+    # |> start_harvesting
 
   end
 
@@ -18,20 +18,23 @@ defmodule GazetteerDrescher.CLI do
     case argv |> parsed_args do
       { %{ help: true }, _, _} ->
         :help
-      { %{ type: type, target_path: target_path }, _, _ } ->
-        { String.to_atom(type), target_path}
-      { %{ type: type}, _, _ } ->
-        { String.to_atom(type)}
+      { %{ target: target_path }, [ format ], _ } ->
+        { String.to_atom(format), target_path}
+      { [] , [ format ] , _ } ->
+        { String.to_atom(format) }
       _ ->
         :help
     end
   end
 
   defp parsed_args(argv) do
-    {switches, argv, errors} = OptionParser.parse(argv,
-      switches: [ help: :boolean, format: :string, target_path: :string],
-      aliases:  [ h:    :help]
-    )
+    {switches, argv, errors} =
+      OptionParser.parse(argv,
+        switches: [ help: :boolean, format: :string, target: :string],
+        aliases:  [ h:    :help, f: :format, t: :target]
+      )
+      |> IO.inspect
+
 
     { Enum.into(switches, %{}), argv, errors }
   end
@@ -41,7 +44,11 @@ defmodule GazetteerDrescher.CLI do
   end
 
   defp validate_request({:marc, output_path}) do
-    {:marc, Writing.open_output_file(output_path)}
+    file_pid =
+      output_path
+      |> Writing.open_output_file
+
+    { :marc, file_pid }
   end
 
   defp validate_request(_) do
@@ -65,14 +72,14 @@ defmodule GazetteerDrescher.CLI do
   end
 
   defp print_help() do
-    IO.puts "usage: mix run lib/gazetteer_drescher.ex --format <output_format> [options]"
+    IO.puts "Usage: ./gazetter_drescher <output_format> [options]"
     IO.puts ""
     IO.puts "Available output formats: "
     Enum.each @output_types, fn ({key, val}) ->
       IO.puts "  '#{key}': #{val[:description]}"
     end
-    IO.puts "other options:"
-    IO.puts "  --target_path <output path>"
+    IO.puts "Options: -t | --target <output path>"
+    IO.puts "         -h | --help"
     System.halt(0)
   end
 end
