@@ -7,7 +7,7 @@ Elixir runs in the Erlang Virtual Machine (VM), so you will need to install both
 
 The development setup was done so far by simply running  `brew install erlang` and `brew install elixir` on Mac OS X and the `apt-get`-variants for Ubuntu/Debian.
 
-Further Installation variants see:
+For further installation information and variants see:
 
 * http://www.erlang.org/downloads
 * http://elixir-lang.org/install.html
@@ -16,7 +16,7 @@ Further Installation variants see:
 
 After having installed both Erlang and Elixir, check out the repository, switch to its root directory and run `mix deps.get`.    
 
-[Mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) is Elixir's package manager/build tool and should download everything automatically, by reading the dependencies from  `mix.exs`.
+[Mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) is Elixir's package manager/build tool and should download everything automatically by reading the dependencies from  `mix.exs`.
 
 
 ## Usage
