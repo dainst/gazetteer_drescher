@@ -1,4 +1,5 @@
 defmodule GazetteerDrescher.MARC do
+  require Logger
 
   alias GazetteerDrescher.MARC.Record
   alias GazetteerDrescher.MARC.Field
@@ -68,6 +69,7 @@ defmodule GazetteerDrescher.MARC do
     parent =
       case :ets.lookup(:cached_places, parent_url) do
         [{^parent_url, cached_place }] ->
+          # Logger.debug ~s(Using cached place: #{cached_place["prefName"]["title"]})
           cached_place
         [] ->
           response = String.replace(parent_url, "place", "doc") <> ".json"

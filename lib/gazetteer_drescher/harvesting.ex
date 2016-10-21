@@ -7,7 +7,7 @@ defmodule GazetteerDrescher.Harvesting do
   @batch_limit Application.get_env(:gazetteer_drescher, :batch_limit)
 
   def start(q, batch_size) do
-    query = "#{@gazetteer_base_url}/search?limit=#{batch_size}&offset=0&#{q}"
+    query = "#{@gazetteer_base_url}/search.json?limit=#{batch_size}&offset=0&#{q}"
 
     Logger.info "Fetching first batch: #{query}"
     {:ok, response} =
@@ -23,12 +23,14 @@ defmodule GazetteerDrescher.Harvesting do
       fetch_places({:ok, response})
     end
 
+    IO.inspect batch_size
+    IO.inspect total
     Stream.unfold(batch_size, fn
-      n when n >= total -> nil;
-      n -> {n, n + batch_size}
+      offset when offset >= total -> nil;
+      offset -> {offset, offset + batch_size}
       end)
     |> Stream.map(fn(x) ->
-        url = "#{@gazetteer_base_url}/search?limit=#{batch_size}&offset#{x}&q=*"
+        url = "#{@gazetteer_base_url}/search.json?limit=#{batch_size}&offset=#{x}&#{q}"
         Logger.info "Fetching next batch: #{url}"
         url
        end)
@@ -44,13 +46,16 @@ defmodule GazetteerDrescher.Harvesting do
   end
 
   defp fetch_places({:ok, body}) do
+    # Logger.debug "fetch_places called"
     { output_type, output_file, _days_offset } = Agent.get(RequestInfo, &(&1))
 
     # use ~s sigil instead of double quotes to allow the use of double quotes in interpolation
     body["result"]
-    |> Stream.map(fn x -> ~s(#{@gazetteer_base_url}/doc/#{x["gazId"]}.json) end)
-    |> Stream.map(&Task.async(fn -> start_query(&1) end ))
-    |> Stream.map(&Task.await(&1, :infinity))
+    |> Stream.map(fn x ->
+        ~s(#{@gazetteer_base_url}/doc/#{x["gazId"]}.json)
+      end)
+    |> Enum.map(&Task.async(fn -> start_query(&1) end ))
+    |> Enum.map(&Task.await(&1, :infinity))
     |> Stream.map(&handle_response(&1))
     |> Stream.map(&add_to_cache(&1))
     |> Enum.map(&write_place(&1, output_type, output_file))
@@ -61,6 +66,7 @@ defmodule GazetteerDrescher.Harvesting do
     url
     |> start_query
     |> handle_response
+    |> add_to_cache
   end
 
   defp handle_response({ :ok, %HTTPoison.Response{ status_code: 200, body: body} } ) do
@@ -115,22 +121,25 @@ defmodule GazetteerDrescher.Harvesting do
         |> Enum.map(&Enum.member?(@cache_config, &1))
         |> Enum.any?
 
+
       if add? == true do
-        :ets.insert(:cached_places, {place["@id"], place})
-        # Agent.update(CachedPlaces,
-        #   &Dict.put(&1, place["@id"], place, 20000)
-        # )
+        # Logger.debug(~s(Adding #{place["prefName"]["title"]} to cache.))
+        _inserted = :ets.insert_new(:cached_places, {place["@id"], place})
+        # if inserted == false do
+          # Logger.error(~s(Successful: #{inserted}.))
+        # end
       end
     end
 
-    # Also add "Welt" (world), the overall root.
+    # Also cache "Welt" (world), the overall root.
     if place["gazId"] == "2042600" do
-      # :ets.insert(:cached_places, { place["@id"], "test"})
-      :ets.insert(:cached_places, { place["@id"], place })
+      # Logger.debug(~s(Adding #{place["prefName"]["title"]} to cache.))
+      _inserted = :ets.insert_new(:cached_places, { place["@id"], place })
+      # if inserted == false do
+        # Logger.error(~s(Successful: #{inserted}.))
+      # end
+
     end
-
-
     {:ok, place}
-
   end
 end
