@@ -66,12 +66,12 @@ defmodule GazetteerDrescher.CLI do
   end
 
   defp setup({requested_type, file_pid, days_offset}) do
-    
+
     Agent.start(fn ->
       { requested_type, file_pid, days_offset }
     end, name: RequestInfo)
 
-    :ets.new(:cached_places, [:named_table, :public])
+    :ets.new(:cached_places, [:named_table, :public, read_concurrency: true])
 
     start_harvesting(days_offset)
   end
