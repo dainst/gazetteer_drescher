@@ -37,11 +37,9 @@ defmodule GazetteerDrescher.CLI do
     {switches, argv, errors} =
       OptionParser.parse(argv,
         switches: [ help: :boolean,
-          format: :string,
           target: :string,
           days: :integer],
         aliases:  [ h: :help,
-          f: :format,
           t: :target,
           d: :days]
       )
