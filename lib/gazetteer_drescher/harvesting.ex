@@ -22,9 +22,7 @@ defmodule GazetteerDrescher.Harvesting do
     task_first_batch = Task.async fn ->
       fetch_places({:ok, response})
     end
-
-    IO.inspect batch_size
-    IO.inspect total
+    
     Stream.unfold(batch_size, fn
       offset when offset >= total -> nil;
       offset -> {offset, offset + batch_size}
