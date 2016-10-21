@@ -46,10 +46,10 @@ Each record produced is flagged as an MARC authority record in its header. All f
 
 Assigned values are taken either from individual JSON records (`place`) provided by the Gazetteer or static strings.
 
-__040 ## a__: "iDAI.gazetteer"
-
 __024 ## a__: `place["gazId"]`  
 __024 ## 2__: "iDAI.gazetteer"
+
+__040 ## a__: "iDAI.gazetteer"
 
 __151 ## a__: `place["prefName"]["title"]`  
 
