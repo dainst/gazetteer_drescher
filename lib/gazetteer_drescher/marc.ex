@@ -6,10 +6,15 @@ defmodule GazetteerDrescher.MARC do
   alias GazetteerDrescher.Harvesting
 
   def create_output(place) do
-    if Map.has_key?(place, "prefName") == false, do: ""
+    if invalid?(place) do
+      ""
+    else
+      process(place)
+    end
+  end
 
+  defp process(place) do
     record = %Record{}
-
     record = Record.add_field(record, %Field{
       tag: 24,
       i1: "7",
@@ -95,6 +100,18 @@ defmodule GazetteerDrescher.MARC do
             "i": "part of"
           ]})
         add_parent_tracing(record, parent["parent"])
+    end
+  end
+
+  defp invalid?(place) do
+    cond do
+      Map.has_key?(place, "prefName") == false      -> true
+      place["gazId"] == nil                         -> true
+      String.trim(place["gazId"]) == ""             -> true
+      place["prefName"]["title"] == nil             -> true
+      String.trim(place["prefName"]["title"]) == "" -> true
+
+      true                                          -> false
     end
   end
 end
