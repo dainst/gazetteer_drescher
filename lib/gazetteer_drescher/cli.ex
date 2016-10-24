@@ -1,7 +1,7 @@
 defmodule GazetteerDrescher.CLI do
   require Logger
 
-  @output_types Application.get_env(:gazetteer_drescher, :output_types)
+  @output_formats Application.get_env(:gazetteer_drescher, :output_formats)
   @default_batch_size Application.get_env(:gazetteer_drescher, :default_batch_size)
 
   alias GazetteerDrescher.Writing
@@ -47,7 +47,7 @@ defmodule GazetteerDrescher.CLI do
   end
 
   defp validate_request({:marc, nil, days_offset}) do
-    {:marc, @output_types[:marc][:default_target_file], days_offset}
+    { :marc, @output_formats[:marc][:default_target_file], days_offset}
     |> validate_request
   end
 
@@ -63,10 +63,9 @@ defmodule GazetteerDrescher.CLI do
     print_help
   end
 
-  defp setup({requested_type, file_pid, days_offset}) do
-
+  defp setup({requested_format, file_pid, days_offset}) do
     Agent.start(fn ->
-      { requested_type, file_pid, days_offset }
+      { requested_format, file_pid, days_offset }
     end, name: RequestInfo)
 
     :ets.new(:cached_places, [:named_table, :public, read_concurrency: true])
@@ -91,7 +90,7 @@ defmodule GazetteerDrescher.CLI do
     IO.puts "Usage: ./gazetter_drescher <output_format> [options]"
     IO.puts ""
     IO.puts "Available output formats: "
-    Enum.each @output_types, fn ({key, val}) ->
+    Enum.each @output_formats, fn ({key, val}) ->
       IO.puts "  '#{key}': #{val[:description]}"
     end
     IO.puts "Options: -t | --target <output path>"

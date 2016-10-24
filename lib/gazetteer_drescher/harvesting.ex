@@ -22,7 +22,7 @@ defmodule GazetteerDrescher.Harvesting do
     task_first_batch = Task.async fn ->
       fetch_places({:ok, response})
     end
-    
+
     Stream.unfold(batch_size, fn
       offset when offset >= total -> nil;
       offset -> {offset, offset + batch_size}
@@ -45,8 +45,7 @@ defmodule GazetteerDrescher.Harvesting do
 
   defp fetch_places({:ok, body}) do
     # Logger.debug "fetch_places called"
-    { output_type, output_file, _days_offset } = Agent.get(RequestInfo, &(&1))
-
+    
     # use ~s sigil instead of double quotes to allow the use of double quotes in interpolation
     body["result"]
     |> Stream.map(fn x ->
@@ -56,7 +55,7 @@ defmodule GazetteerDrescher.Harvesting do
     |> Enum.map(&Task.await(&1, :infinity))
     |> Stream.map(&handle_response(&1))
     |> Stream.map(&add_to_cache(&1))
-    |> Enum.map(&write_place(&1, output_type, output_file))
+    |> Enum.map(&write_place(&1))
 
   end
 
@@ -121,22 +120,13 @@ defmodule GazetteerDrescher.Harvesting do
 
 
       if add? == true do
-        # Logger.debug(~s(Adding #{place["prefName"]["title"]} to cache.))
         _inserted = :ets.insert_new(:cached_places, {place["@id"], place})
-        # if inserted == false do
-          # Logger.error(~s(Successful: #{inserted}.))
-        # end
       end
     end
 
     # Also cache "Welt" (world), the overall root.
     if place["gazId"] == "2042600" do
-      # Logger.debug(~s(Adding #{place["prefName"]["title"]} to cache.))
       _inserted = :ets.insert_new(:cached_places, { place["@id"], place })
-      # if inserted == false do
-        # Logger.error(~s(Successful: #{inserted}.))
-      # end
-
     end
     {:ok, place}
   end

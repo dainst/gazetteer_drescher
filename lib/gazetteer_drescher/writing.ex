@@ -11,11 +11,17 @@ defmodule GazetteerDrescher.Writing do
       |> File.open!([:write, :utf8])
   end
 
-  def write_place({:ok, place}, :marc, file_pid) do
-    marc =
-      place
-      |> MARC.create_output
+  def write_place({:ok, place}) do
+    { output_format, file_pid, _days_offset } = Agent.get(RequestInfo, &(&1))
 
-    IO.write( file_pid, marc )
+    case output_format do
+      :marc ->
+        marc =
+          place
+          |> MARC.create_output
+
+        IO.write( file_pid, marc )
+      _ -> Logger.error "Unknown output format: #{output_format}"
+    end
   end
 end

@@ -4,7 +4,7 @@ use Mix.Config
 
 config :gazetteer_drescher,
   default_batch_size: 10000,
-  output_types: [
+  output_formats: [
     marc:
     %{
       description: "MARC21 authority record. See http://www.loc.gov/marc/authority/",
