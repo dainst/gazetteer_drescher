@@ -3,14 +3,24 @@ defmodule GazetteerDrescher.CLI do
 
   @output_formats Application.get_env(:gazetteer_drescher, :output_formats)
   @default_batch_size Application.get_env(:gazetteer_drescher, :default_batch_size)
+  @harvesting_log Application.get_env(:gazetteer_drescher, :harvesting_log)
 
   alias GazetteerDrescher.Writing
 
   def main(argv) do
-    argv
+    {requested_format, file_pid, days_offset} = argv
     |> parse_args
     |> validate_request
-    |> setup
+
+
+    setup({requested_format, file_pid, days_offset})
+    success? =
+      start_harvesting(days_offset)
+      |> Enum.all?(fn(x) -> x == :ok  end)
+
+    if success? do
+      log_time
+    end
 
     Logger.info "Done."
   end
@@ -69,8 +79,6 @@ defmodule GazetteerDrescher.CLI do
     end, name: RequestInfo)
 
     :ets.new(:cached_places, [:named_table, :public, read_concurrency: true])
-
-    start_harvesting(days_offset)
   end
 
   defp start_harvesting(nil) do
@@ -79,11 +87,54 @@ defmodule GazetteerDrescher.CLI do
   end
 
   defp start_harvesting(days_offset) do
+
     to    = Timex.today
-    from  = Timex.shift(to, days: -days_offset)
+    from  = check_date(days_offset)
 
     "q=lastChangeDate:[#{from}%20TO%20#{to}]"
     |> GazetteerDrescher.Harvesting.start(@default_batch_size)
+  end
+
+  defp check_date(days_offset) do
+    case File.read(@harvesting_log) do
+      {:ok, content} ->
+        content
+        |> Timex.parse("%Y-%m-%dT%H:%M:%S", :strftime)
+        |> extend_timeframe?(days_offset)
+      _ ->
+        Timex.shift(Timex.today, days: -days_offset)
+    end
+  end
+
+  defp extend_timeframe?({:ok, last_update}, requested_offset) do
+
+    request = Timex.shift(Timex.today, days: -requested_offset)
+    case Timex.before?(last_update, request) do
+      true ->
+        Logger.info "Re-running last update, which seems to have failed."
+        last_update
+      false ->
+        Logger.info "Applying requested offset."
+        request
+      default ->
+        IO.inspect default
+    end
+  end
+
+  defp extend_timeframe?({:error, message}, requested_offset) do
+    IO.puts "Failed to parse #{@harvesting_log}:"
+    IO.puts message
+    IO.puts "Using requested offset."
+    request = Timex.shift(Timex.today, days: -requested_offset)
+  end
+
+  defp log_time do
+    file_pid = Writing.open_output_file(@harvesting_log)
+
+    {:ok, out_str} = Timex.today
+    |> Timex.format("{ISO:Extended}")
+
+    IO.binwrite file_pid, out_str
   end
 
   defp print_help() do

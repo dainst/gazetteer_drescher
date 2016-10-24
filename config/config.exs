@@ -12,7 +12,8 @@ config :gazetteer_drescher,
     }
   ],
   gazetteer_base_url: "https://gazetteer.dainst.org",
-  cached_place_types: ["continent", "administrative-unit"]
+  cached_place_types: ["continent", "administrative-unit"],
+  harvesting_log: "./log/last_run.log"
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this
 # file won't be loaded nor affect the parent project. For this reason,

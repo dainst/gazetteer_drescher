@@ -19,5 +19,8 @@ erl_crash.dump
 # Ignore default drescher output folder
 /output
 
+# Ignore log folder
+/log
+
 # Legacy 
 *.pyc

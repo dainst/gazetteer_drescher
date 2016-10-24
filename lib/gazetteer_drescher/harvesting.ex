@@ -1,6 +1,6 @@
 defmodule GazetteerDrescher.Harvesting do
   require Logger
-  import GazetteerDrescher.Writing, only: [write_place: 3]
+  import GazetteerDrescher.Writing, only: [write_place: 1]
   @user_agent [{"User-agent", "Elixir GazetteerDrescher"}]
   @gazetteer_base_url Application.get_env(:gazetteer_drescher, :gazetteer_base_url)
   @cache_config Application.get_env(:gazetteer_drescher, :cached_place_types)
@@ -45,7 +45,7 @@ defmodule GazetteerDrescher.Harvesting do
 
   defp fetch_places({:ok, body}) do
     # Logger.debug "fetch_places called"
-    
+
     # use ~s sigil instead of double quotes to allow the use of double quotes in interpolation
     body["result"]
     |> Stream.map(fn x ->

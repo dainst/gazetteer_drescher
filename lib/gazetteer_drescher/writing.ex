@@ -1,5 +1,6 @@
 defmodule GazetteerDrescher.Writing do
-
+  require Logger
+  
   alias GazetteerDrescher.MARC
 
   def open_output_file(file) do
