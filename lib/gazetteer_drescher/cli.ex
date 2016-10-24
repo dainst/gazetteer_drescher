@@ -111,10 +111,12 @@ defmodule GazetteerDrescher.CLI do
     request = Timex.shift(Timex.today, days: -requested_offset)
     case Timex.before?(last_update, request) do
       true ->
-        Logger.info "Re-running last update, which seems to have failed."
+        Logger.info "Extending offset up to last successful update: " <>
+          "Harvesting every change since #{last_update}."
         last_update
       false ->
-        Logger.info "Applying requested offset."
+        Logger.info "Applying requested offset of #{requested_offset} days: " <>
+          "Harvesting every change since #{request}."
         request
       default ->
         IO.inspect default
@@ -125,7 +127,7 @@ defmodule GazetteerDrescher.CLI do
     IO.puts "Failed to parse #{@harvesting_log}:"
     IO.puts message
     IO.puts "Using requested offset."
-    request = Timex.shift(Timex.today, days: -requested_offset)
+    Timex.shift(Timex.today, days: -requested_offset)
   end
 
   defp log_time do
