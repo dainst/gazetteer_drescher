@@ -1,6 +1,9 @@
 # gazetteer_drescher
-Harvesting application for the [iDAI.gazetteer](https://gazetteer.dainst.org/),
+Harvesting application [(Documentation)](https://dainst.github.io/gazetteer_drescher/api-reference.html) for the [iDAI.gazetteer](https://gazetteer.dainst.org/),
 written in [Elixir](http://elixir-lang.org/)/[Erlang](http://www.erlang.org/).
+
+
+
 
 ## Prerequisites
 Elixir runs in the Erlang Virtual Machine (VM), so you will need to install both Erlang and Elixir
