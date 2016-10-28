@@ -1,4 +1,7 @@
 defmodule GazetteerDrescher.CLI do
+  @moduledoc """
+  This module implements the application's command line interface (CLI).
+  """
   require Logger
 
   @output_formats Application.get_env(:gazetteer_drescher, :output_formats)
@@ -7,11 +10,18 @@ defmodule GazetteerDrescher.CLI do
 
   alias GazetteerDrescher.Writing
 
+  @doc """
+  Function that handles the command line arguments and starts the harvesting
+  process accordingly.
+
+  Example: `main(["marc", "-t", "/custom/output/folder"])`
+
+  Returns: `:ok`
+  """
   def main(argv) do
     {requested_format, file_pid, days_offset} = argv
     |> parse_args
     |> validate_request
-
 
     setup({requested_format, file_pid, days_offset})
     success? =
@@ -25,7 +35,7 @@ defmodule GazetteerDrescher.CLI do
     Logger.info "Done."
   end
 
-  def parse_args(argv) do
+  defp parse_args(argv) do
     case argv |> parsed_args do
       { %{ help: true }, _, _} ->
         :help
@@ -87,7 +97,6 @@ defmodule GazetteerDrescher.CLI do
   end
 
   defp start_harvesting(days_offset) do
-
     to    = Timex.today
     from  = check_date(days_offset)
 

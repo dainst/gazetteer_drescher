@@ -1,10 +1,19 @@
 defmodule GazetteerDrescher.MARC do
+  @moduledoc """
+  This module transforms the parsed JSON data of a place into the marc21 format.
+  """
   require Logger
 
   alias GazetteerDrescher.MARC.Record
   alias GazetteerDrescher.MARC.Field
   alias GazetteerDrescher.Harvesting
 
+  @doc """
+  Transforms a parsed place's JSON data (as Map) into a marc21 record string.
+  If the input Map is deemed invalid, an empty string is returned.
+
+  Returns: Empty String or String with place's data in marc21.
+  """
   def create_output(place) do
     if invalid?(place) do
       ""
@@ -65,11 +74,11 @@ defmodule GazetteerDrescher.MARC do
     end
   end
 
-  def add_parent_tracing(record, nil) do
+  defp add_parent_tracing(record, nil) do
     record
   end
 
-  def add_parent_tracing(record, parent_url) do
+  defp add_parent_tracing(record, parent_url) do
     # cached_places = Agent.get(CachedPlaces, &(&1))
     parent =
       case :ets.lookup(:cached_places, parent_url) do

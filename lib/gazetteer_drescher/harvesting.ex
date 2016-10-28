@@ -1,11 +1,21 @@
 defmodule GazetteerDrescher.Harvesting do
+  @moduledoc """
+  This module implements the core harvesting functions.
+  """
   require Logger
   import GazetteerDrescher.Writing, only: [write_place: 1]
-  @user_agent [{"User-agent", "Elixir GazetteerDrescher"}]
+  @user_agent {"User-agent", "Elixir GazetteerDrescher"}
   @gazetteer_base_url Application.get_env(:gazetteer_drescher, :gazetteer_base_url)
   @cache_config Application.get_env(:gazetteer_drescher, :cached_place_types)
   @batch_limit Application.get_env(:gazetteer_drescher, :batch_limit)
 
+  @doc """
+  Starts harvesting with a given search query string and batch size.
+
+  Example: `start("q=*", 100)`
+
+  Returns: `:ok`
+  """
   def start(q, batch_size) do
     query = "#{@gazetteer_base_url}/search.json?limit=#{batch_size}&offset=0&#{q}"
 
@@ -55,10 +65,18 @@ defmodule GazetteerDrescher.Harvesting do
     |> Enum.map(&Task.await(&1, :infinity))
     |> Stream.map(&handle_response(&1))
     |> Stream.map(&add_to_cache(&1))
+    |> Stream.map(fn({:ok, place}) -> place end)
     |> Enum.map(&write_place(&1))
 
   end
 
+  @doc """
+  Fetches a single iDAI.gazetteer place, specified by URI.
+
+  Example: `fetch_place("https://gazetteer.dainst.org/doc/2312125.json")`
+
+  Returns: The place's JSON data parsed by :poison, as an Elixir Map.
+  """
   def fetch_place(url) do
     url
     |> start_query
@@ -107,7 +125,8 @@ defmodule GazetteerDrescher.Harvesting do
 
   defp start_query(url) do
     url
-    |> HTTPoison.get([{"Accept", "application/json"}], [recv_timeout: :infinity])
+    |> HTTPoison.get([{"Accept", "application/json"}, @user_agent],
+      [recv_timeout: :infinity])
   end
 
   defp add_to_cache({:ok, place}) do
@@ -129,5 +148,9 @@ defmodule GazetteerDrescher.Harvesting do
       _inserted = :ets.insert_new(:cached_places, { place["@id"], place })
     end
     {:ok, place}
+  end
+
+  defp add_to_cache({error, reason}) do
+    {error, reason}
   end
 end

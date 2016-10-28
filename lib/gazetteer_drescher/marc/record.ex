@@ -1,12 +1,26 @@
 defmodule GazetteerDrescher.MARC.Record do
+  @moduledoc """
+  This module defines a basic Struct for marc21 records.
+  """
   defstruct [fields: []]
 
   alias GazetteerDrescher.MARC.{ Field, Record }
 
+  @doc """
+  Add another GazetteerDrescher.MARC.Field to a given record.
+
+  Returns: The updated Record struct.
+  """
   def add_field(record = %Record{}, field = %Field{}) do
     Map.put(record, :fields, record.fields ++ [field])
   end
 
+  @doc """
+  Transform a given record into a single marc21 string, including its
+  fields and its fields' subfields.
+
+  Returns: The Record data as a string formatted as marc21.
+  """
   def to_marc(record = %Record{}) do
 
     processed_fields = Enum.map(record.fields, &Field.to_marc(&1))
@@ -34,7 +48,7 @@ defmodule GazetteerDrescher.MARC.Record do
     leader <> directory <> final_fields <> << 29 >>
   end
 
-  def create_dictionary({tag, length}, {result, offset}) do
+  defp create_dictionary({tag, length}, {result, offset}) do
     adjusted_tag = String.pad_leading(to_string(tag), 3, "0")
     adjusted_offset = String.pad_leading(to_string(offset), 5, "0")
     adjusted_length = String.pad_leading(to_string(length), 4, "0")
@@ -42,7 +56,7 @@ defmodule GazetteerDrescher.MARC.Record do
     { result <> adjusted_tag <> adjusted_length <> adjusted_offset, offset + length }
   end
 
-  def finalize_fields({_tag, content}, result) do
+  defp finalize_fields({_tag, content}, result) do
     result <> content
   end
 end
