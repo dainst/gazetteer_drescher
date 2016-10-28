@@ -8,7 +8,8 @@ defmodule GazetteerDrescher.Mixfile do
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps(),
-     escript: escript
+     escript: escript,
+     docs: [output: "docs"]
    ]
   end
 
