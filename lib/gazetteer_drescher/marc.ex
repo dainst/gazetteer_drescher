@@ -40,38 +40,31 @@ defmodule GazetteerDrescher.MARC do
 
     record = Record.add_field(record, %Field{
       tag: 151,
-      subfields: [
-        "a": place["prefName"]["title"]
-      ]})
+      subfields: get_X51_subfield(place["prefName"])
+    })
 
     record =
       record
-      |> add_geo_tracing(place["names"], [place["prefName"]["title"]])
+      |> add_geo_tracing(place["names"])
       |> add_parent_tracing(place["parent"])
 
     Record.to_marc(record)
   end
 
-  defp add_geo_tracing(record, nil, _known_alternatives) do
+  defp add_geo_tracing(record, nil) do
     record
   end
 
-  defp add_geo_tracing(record, [], _known_alternatives) do
+  defp add_geo_tracing(record, []) do
     record
   end
 
-  defp add_geo_tracing(record, [alternative_name | tail], known_alternatives) do
-    cond do
-      Enum.member?(known_alternatives, alternative_name["title"]) ->
-        add_geo_tracing(record, tail, known_alternatives)
-      true ->
-        Record.add_field(record, %Field{
-          tag: 451,
-          subfields: [
-            "a": alternative_name["title"]
-          ]})
-        |> add_geo_tracing(tail, known_alternatives ++ [alternative_name["title"]])
-    end
+  defp add_geo_tracing(record, [alternative_name | tail]) do
+    Record.add_field(record, %Field{
+      tag: 451,
+      subfields: get_X51_subfield(alternative_name)
+    })
+    |> add_geo_tracing(tail)
   end
 
   defp add_parent_tracing(record, nil) do
@@ -104,10 +97,8 @@ defmodule GazetteerDrescher.MARC do
         record = record
         |> Record.add_field(%Field{
           tag: 551,
-          subfields: [
-            "a": parent["prefName"]["title"],
-            "i": "part of"
-          ]})
+          subfields: get_X51_subfield(parent["prefName"]) ++ [ "i": "part of" ]
+          })
         add_parent_tracing(record, parent["parent"])
     end
   end
@@ -121,6 +112,14 @@ defmodule GazetteerDrescher.MARC do
       String.trim(place["prefName"]["title"]) == "" -> true
 
       true                                          -> false
+    end
+  end
+
+  defp get_X51_subfield(item) do
+    if item["language"] == nil or item["language"] == "" do
+      [ "a": item["title"] ]
+    else
+      [ "a": item["title"], "l": item["language"] ]
     end
   end
 end
