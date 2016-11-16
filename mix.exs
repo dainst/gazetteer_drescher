@@ -38,7 +38,7 @@ defmodule GazetteerDrescher.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:httpoison, "~> 0.9.0"},
+      {:httpoison, "~> 0.10.0"},
       {:poison, "~> 3.0"},
       {:timex, "~> 3.0"},
       {:ex_doc, "~> 0.14", only: :dev}

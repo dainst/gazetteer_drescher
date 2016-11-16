@@ -22,7 +22,7 @@ defmodule GazetteerDrescher.Harvesting do
     Logger.info "Fetching first batch: #{query}"
     {:ok, response} =
       query
-      |> start_query
+      |> start_query(3)
       |> handle_response
 
     total = response["total"]
@@ -42,7 +42,7 @@ defmodule GazetteerDrescher.Harvesting do
         Logger.info "Fetching next batch: #{url}"
         url
        end)
-    |> Stream.map(&start_query(&1))
+    |> Stream.map(&start_query(&1, 3))
     |> Stream.map(&handle_response(&1))
     |> Enum.map(&Task.async(fn -> fetch_places(&1) end ))
     |> Enum.map(&Task.await(&1, :infinity))
@@ -61,7 +61,7 @@ defmodule GazetteerDrescher.Harvesting do
     |> Stream.map(fn x ->
         ~s(#{@gazetteer_base_url}/doc/#{x["gazId"]}.json)
       end)
-    |> Enum.map(&Task.async(fn -> start_query(&1) end ))
+    |> Enum.map(&Task.async(fn -> start_query(&1, 3) end ))
     |> Enum.map(&Task.await(&1, :infinity))
     |> Stream.map(&handle_response(&1))
     |> Stream.map(&add_to_cache(&1))
@@ -79,33 +79,43 @@ defmodule GazetteerDrescher.Harvesting do
   """
   def fetch_place(url) do
     url
-    |> start_query
+    |> start_query(3)
     |> handle_response
     |> add_to_cache
   end
 
-  defp handle_response({ :ok, %HTTPoison.Response{ status_code: 200, body: body} } ) do
+  defp start_query(url, retries) do
+    response =
+      url
+      |> HTTPoison.get([{"Accept", "application/json"}, @user_agent],
+        [recv_timeout: 60000, follow_redirect: true])
+
+    [ response, retries, url ]
+  end
+
+  defp handle_response([{ :ok, %HTTPoison.Response{ status_code: 200, body: body} },
+    _retries, _url] ) do
     { :ok, Poison.decode!(body) }
   end
 
-  defp handle_response({ :ok, %HTTPoison.Response{
+  defp handle_response([{ :ok, %HTTPoison.Response{
       status_code: 404,
       body: _body,
-      headers: _headers} } ) do
+      headers: _headers} }, _retries, _url] ) do
     { :error, 404 }
   end
 
-  defp handle_response({:ok, %HTTPoison.Response{
+  defp handle_response([{:ok, %HTTPoison.Response{
       status_code: 403,
       body: _body,
-      headers: _headers} } ) do
+      headers: _headers} }, _retries, _url] ) do
     { :error, 403 }
   end
 
-  defp handle_response({ :ok, %HTTPoison.Response{
+  defp handle_response([{ :ok, %HTTPoison.Response{
       status_code: 500,
       body: body,
-      headers: headers} } ) do
+      headers: headers} }, _retries, _url] ) do
     Logger.error "Status code 500 in response."
     Logger.error "Headers:"
     Logger.error  headers
@@ -116,17 +126,28 @@ defmodule GazetteerDrescher.Harvesting do
     System.halt(0)
   end
 
-  defp handle_response({:error, %HTTPoison.Error{reason: reason}} ) do
-    Logger.error "HTTPoison error."
-    IO.inspect reason
+  defp handle_response([{:error, %HTTPoison.Error{reason: :timeout} = error_msg},
+    retries, url]) do
 
-    System.halt(0)
+    if retries > 0 do
+      url
+      |> start_query(retries - 1)
+      |> handle_response
+    else
+      Logger.error "HTTPoison error."
+      Logger.error error_msg
+      Logger.error url
+
+      System.halt(0)
+    end
   end
 
-  defp start_query(url) do
-    url
-    |> HTTPoison.get([{"Accept", "application/json"}, @user_agent],
-      [recv_timeout: :infinity])
+  defp handle_response([{:error, error_msg }, _retries,  url]) do
+    Logger.error "HTTPoison error."
+    IO.inspect error_msg
+    IO.inspect url
+
+    System.halt(0)
   end
 
   defp add_to_cache({:ok, place}) do
@@ -137,9 +158,8 @@ defmodule GazetteerDrescher.Harvesting do
         |> Enum.map(&Enum.member?(@cache_config, &1))
         |> Enum.any?
 
-
       if add? == true do
-        _inserted = :ets.insert_new(:cached_places, {place["@id"], place})
+        _inserted = :ets.insert_new(:cached_places, { place["@id"], place })
       end
     end
 
