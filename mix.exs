@@ -8,7 +8,7 @@ defmodule GazetteerDrescher.Mixfile do
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps(),
-     escript: escript,
+     escript: escript(),
      docs: [output: "docs"]
    ]
   end
@@ -38,10 +38,10 @@ defmodule GazetteerDrescher.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:httpoison, "~> 0.10.0"},
-      {:poison, "~> 3.0"},
-      {:timex, "~> 3.0"},
-      {:ex_doc, "~> 0.14", only: :dev}
+      {:httpoison, "~> 1.0"},
+      {:poison, "~> 3.1"},
+      {:timex, "~> 3.1"},
+      {:ex_doc, "~> 0.16", only: :dev}
     ]
   end
 end

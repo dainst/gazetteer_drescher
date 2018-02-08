@@ -29,14 +29,15 @@ defmodule GazetteerDrescher.CLI do
       |> Enum.all?(fn(x) -> x == :ok  end)
 
     if success? do
-      log_time
+      log_time()
     end
 
     Logger.info "Done."
   end
 
   defp parse_args(argv) do
-    case argv |> parsed_args do
+    case argv
+         |> parsed_args do
       { %{ help: true }, _, _} ->
         :help
 
@@ -46,7 +47,7 @@ defmodule GazetteerDrescher.CLI do
         { String.to_atom(format), target_path, nil}
       { %{ days: days }, [ format ], _ } ->
         { String.to_atom(format), nil, days}
-      { [] , [ format ] , _ } ->
+      { %{} , [ format ] , _ } ->
         { String.to_atom(format), nil, nil }
       _ ->
         :help
@@ -80,7 +81,7 @@ defmodule GazetteerDrescher.CLI do
   end
 
   defp validate_request(_) do
-    print_help
+    print_help()
   end
 
   defp setup({requested_format, file_pid, days_offset}) do
@@ -139,7 +140,7 @@ defmodule GazetteerDrescher.CLI do
     Timex.shift(Timex.today, days: -requested_offset)
   end
 
-  defp log_time do
+  defp log_time() do
     file_pid = Writing.open_output_file(@harvesting_log)
 
     {:ok, out_str} = Timex.today
