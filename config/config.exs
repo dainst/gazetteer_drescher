@@ -3,7 +3,7 @@
 use Mix.Config
 
 config :gazetteer_drescher,
-  default_batch_size: 100,
+  default_batch_size: 250,
   output_formats: [
     marc:
     %{
