@@ -26,7 +26,7 @@ defmodule GazetteerDrescher.Writing do
 
     case output_format do
       :json ->
-        IO.write(file_pid, "{'result':[")
+        IO.write(file_pid, ~s({"result":[))
     end
   end
 
@@ -35,7 +35,7 @@ defmodule GazetteerDrescher.Writing do
 
     case output_format do
       :json ->
-        IO.write(file_pid, "{']}")
+        IO.write(file_pid, "]}")
     end
   end
 
