@@ -33,6 +33,8 @@ defmodule GazetteerDrescher.Harvesting do
       fetch_places({:ok, response})
     end
 
+    Logger.info "Please stand by while the places are being processed."
+
     Stream.unfold(batch_size, fn
       offset when offset >= total -> nil;
       offset -> {offset, offset + batch_size}
@@ -47,7 +49,6 @@ defmodule GazetteerDrescher.Harvesting do
     |> Enum.map(&Task.async(fn -> fetch_places(&1) end ))
     |> Enum.map(&Task.await(&1, :infinity))
 
-    Logger.info "Please stand by while the places are being processed."
 
     Task.await(task_first_batch, :infinity)
 
@@ -115,15 +116,19 @@ defmodule GazetteerDrescher.Harvesting do
   defp handle_response([{ :ok, %HTTPoison.Response{
       status_code: 500,
       body: body,
-      headers: headers} }, _retries, _url] ) do
+      headers: headers} }, retries, url] ) do
     Logger.error "Status code 500 in response."
-    Logger.error "Headers:"
-    Logger.error  headers
-    Logger.error "Body:"
-    Logger.error  body
-    Logger.error "Stopping script..."
-
-    System.halt(0)
+    Logger.error "Headers: #{inspect headers}"
+    Logger.error "Body: #{inspect body}"
+    if retries > 0 do
+      Logger.error "Retrying.."
+      url
+      |> start_query(retries - 1)
+      |> handle_response
+    else
+      Logger.error "Stopping script..."
+      System.halt()
+    end
   end
 
   defp handle_response([{:error, %HTTPoison.Error{reason: :timeout} = error_msg},
@@ -135,10 +140,8 @@ defmodule GazetteerDrescher.Harvesting do
       |> handle_response
     else
       Logger.error "HTTPoison error."
-      Logger.error error_msg
-      Logger.error url
-
-      System.halt(0)
+      Logger.error "#{inspect error_msg}"
+      Logger.error "#{inspect url}"
     end
   end
 

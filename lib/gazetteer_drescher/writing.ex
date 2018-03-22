@@ -21,6 +21,25 @@ defmodule GazetteerDrescher.Writing do
       |> File.open!([:write, :utf8])
   end
 
+  def write_header() do
+    { output_format, file_pid, _days_offset } = Agent.get(RequestInfo, &(&1))
+
+    case output_format do
+      :json ->
+        IO.write(file_pid, "{'result':[")
+    end
+  end
+
+  def write_footer() do
+    { output_format, file_pid, _days_offset } = Agent.get(RequestInfo, &(&1))
+
+    case output_format do
+      :json ->
+        IO.write(file_pid, "{']}")
+    end
+  end
+
+
   @doc """
   Chooses transformation module based on requested output format and hands over
   the given place data (JSON parsed as Map). Then writes the transformed data
@@ -30,8 +49,18 @@ defmodule GazetteerDrescher.Writing do
   """
   def write_place(place) do
     { output_format, file_pid, _days_offset } = Agent.get(RequestInfo, &(&1))
+    { processed_places } = Agent.get(ProcessingInfo, &(&1))
 
     case output_format do
+      :json ->
+        case processed_places do
+          0 ->
+            IO.write( file_pid, Poison.encode!(place))
+          _ ->
+            IO.write( file_pid, "," <> Poison.encode!(place))
+        end
+        Agent.update(ProcessingInfo, fn { state } -> {state + 1} end)
+
       :marc ->
         marc =
           place

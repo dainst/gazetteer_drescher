@@ -5,6 +5,11 @@ use Mix.Config
 config :gazetteer_drescher,
   default_batch_size: 250,
   output_formats: [
+    json:
+    %{
+      description: "Default iDAI.gazetteer JSON format.",
+      default_target_file: "./output/gazetteer.json"
+    },
     marc:
     %{
       description: "MARC21 authority record. See http://www.loc.gov/marc/authority/",

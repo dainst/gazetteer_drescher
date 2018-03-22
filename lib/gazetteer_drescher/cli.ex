@@ -32,6 +32,7 @@ defmodule GazetteerDrescher.CLI do
       log_time()
     end
 
+    Writing.write_footer()
     Logger.info "Done."
   end
 
@@ -67,17 +68,17 @@ defmodule GazetteerDrescher.CLI do
     { Enum.into(switches, %{}), argv, errors }
   end
 
-  defp validate_request({:marc, nil, days_offset}) do
-    { :marc, @output_formats[:marc][:default_target_file], days_offset}
+  defp validate_request({format, nil, days_offset}) do
+    { format, @output_formats[format][:default_target_file], days_offset}
     |> validate_request
   end
 
-  defp validate_request({:marc, output_path, days_offset}) do
+  defp validate_request({format, output_path, days_offset}) do
     file_pid =
       output_path
       |> Writing.open_output_file
 
-    { :marc, file_pid, days_offset }
+    { format, file_pid, days_offset }
   end
 
   defp validate_request(_) do
@@ -88,6 +89,11 @@ defmodule GazetteerDrescher.CLI do
     Agent.start(fn ->
       { requested_format, file_pid, days_offset }
     end, name: RequestInfo)
+
+    Agent.start(fn -> { 0 }
+    end, name: ProcessingInfo)
+
+    Writing.write_header()
 
     :ets.new(:cached_places, [:named_table, :public, read_concurrency: true])
   end
