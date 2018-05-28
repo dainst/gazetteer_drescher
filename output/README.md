@@ -1,0 +1,1 @@
+Default location for exported Gazetteer data.

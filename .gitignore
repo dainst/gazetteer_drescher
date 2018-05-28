@@ -14,7 +14,8 @@ erl_crash.dump
 *.ez
 
 # Ignore default drescher output folder
-/output
+/output/*.mrc
+/output/*.json
 
 # Ignore log folder
 /log
