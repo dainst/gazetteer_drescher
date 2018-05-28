@@ -5,7 +5,15 @@ written in [Elixir](http://elixir-lang.org/)/[Erlang](http://www.erlang.org/).
 
 
 
-## Prerequisites
+## Prerequisites 
+
+### Variant: Docker
+
+If you want to run the harvester with docker, there are no further prerequisites.
+
+### Variant: Elixir/Erlang installation
+
+
 Elixir runs in the Erlang Virtual Machine (VM), so you will need to install both Erlang and Elixir
 
 The development setup was done so far by simply running  `brew install erlang` and `brew install elixir` on Mac OS X and the `apt-get`-variants for Ubuntu/Debian.
@@ -28,11 +36,13 @@ After having installed both Erlang and Elixir, check out the repository, switch 
 
 #### (1) Using Docker
 
-TODO
+* Build the image: `docker build -t dainst/gazetteer_drescher .`.
+* Run the script: `docker run -v <Repository Path>/output:/gazetteer_drescher/output dainst/gazetteer_drescher <mix command, see (2)>`.
 
 #### (2) Using Mix:
 * In the root directory, run `mix run lib/gazetteer_drescher.exs <format> [options]`.
 * This is the easiest way to work on the application during development.
+
 
 #### Options
 * `-h | --help` for usage information, including a list of all available `<formats>`.
