@@ -19,158 +19,137 @@ defmodule GazetteerDrescher.CLI do
   Returns: `:ok`
   """
   def main(argv) do
-    {requested_format, file_pid, days_offset} = argv
-    |> parse_args
-    |> validate_request
+    url =
+      argv
+      |> parse_args
+      |> setup
 
-    setup({requested_format, file_pid, days_offset})
     success? =
-      start_harvesting(days_offset)
+      start_harvesting(url)
       |> Enum.all?(fn(x) -> x == :ok  end)
 
     if success? do
-      log_time()
+      write_time_log()
     end
 
     Writing.write_footer()
     Logger.info "Done."
   end
 
-  defp parse_args(argv) do
-    case argv
-         |> parsed_args do
-      { %{ help: true }, _, _} ->
-        :help
-
-      { %{ target: target_path, days: days }, [ format ], _ } ->
-        { String.to_atom(format), target_path, days}
-      { %{ target: target_path }, [ format ], _ } ->
-        { String.to_atom(format), target_path, nil}
-      { %{ days: days }, [ format ], _ } ->
-        { String.to_atom(format), nil, days}
-      { %{} , [ format ] , _ } ->
-        { String.to_atom(format), nil, nil }
-      _ ->
-        :help
-    end
-  end
-
-  defp parsed_args(argv) do
+  defp extract_known_args(argv) do
     {switches, argv, errors} =
       OptionParser.parse(argv,
-        switches: [ help: :boolean,
+        switches: [
+          help: :boolean,
           target: :string,
-          days: :integer],
-        aliases:  [ h: :help,
+          days: :integer,
+          continue: :boolean
+        ],
+        aliases:  [
+          h: :help,
           t: :target,
-          d: :days]
+          d: :days,
+          c: :continue
+        ]
       )
     { Enum.into(switches, %{}), argv, errors }
   end
 
-  defp validate_request({format, nil, days_offset}) do
-    { format, @output_formats[format][:default_target_file], days_offset}
-    |> validate_request
+  defp parse_args(argv) do
+    case argv |> extract_known_args do
+      { %{ help: true }, _, _} ->
+        :help
+      { %{ continue: true, days: _days}, _, _} ->
+        :help
+      { options, [ format_param ], _ } ->
+        { String.to_atom(format_param), options}
+      _ ->
+        :help
+    end
   end
 
-  defp validate_request({format, output_path, days_offset}) do
-    file_pid =
-      output_path
-      |> Writing.open_output_file
-
-    { format, file_pid, days_offset }
+  defp get_target_file(_format, %{target: target_path}) do
+    target_path
   end
 
-  defp validate_request(_) do
+  defp get_target_file(format, _options) do
+    @output_formats[format][:default_target_file]
+  end
+
+  defp get_query_string(%{days: days}) do
+    to =
+      :calendar.local_time()
+      |> (fn({date, _time}) -> date end).()
+      |> Date.from_erl!
+
+    from =
+      to
+      |> Date.add(-days)
+      |> Date.to_string()
+
+    "q=lastChangeDate:[#{from}%20TO%20#{Date.to_string(to)}]"
+  end
+
+  defp get_query_string(%{continue: true}) do
+    to =
+      :calendar.local_time()
+      |> (fn({date, _time}) -> date end).()
+      |> Date.from_erl!
+      |> Date.to_string
+
+    case read_time_log() do
+      {:ok, from} ->
+        "q=lastChangeDate:[#{from}%20TO%20#{to}]"
+      _ ->
+        IO.puts("No previous log found, starting complete dump of all Gazetteer data.")
+        "q=*"
+    end
+
+  end
+
+  defp get_query_string(_options) do
+    "q=*"
+  end
+
+  defp setup(:help) do
     print_help()
   end
 
-  defp setup({requested_format, file_pid, days_offset}) do
-    Agent.start(fn ->
-      { requested_format, file_pid, days_offset }
-    end, name: RequestInfo)
+  defp setup({format, options}) do
+    file_pid =
+      get_target_file(format, options)
+      |> Writing.open_output_file
 
-    Agent.start(fn -> { 0 }
-    end, name: ProcessingInfo)
+    Agent.start(fn -> { format, file_pid }  end, name: RequestInfo)
+    Agent.start(fn -> { 0 }  end, name: ProcessingInfo)
 
     Writing.write_header()
 
     :ets.new(:cached_places, [:named_table, :public, read_concurrency: true])
+
+    get_query_string(options)
   end
 
-  defp start_harvesting(nil) do
-    "q=*"
+  defp start_harvesting(query) do
+    query
     |> GazetteerDrescher.Harvesting.start(@default_batch_size)
   end
 
-  defp start_harvesting(days_offset) do
-    to =
-      :calendar.local_time()
-      |> (fn({date, time}) -> date end).()
-      |> Date.from_erl!
-      |> Date.to_string
-
-    from = check_date(days_offset)
-
-    "q=lastChangeDate:[#{from}%20TO%20#{to}]"
-    |> GazetteerDrescher.Harvesting.start(@default_batch_size)
-  end
-
-  defp check_date(days_offset) do
+  defp read_time_log() do
     case File.read(@harvesting_log) do
       {:ok, content} ->
         content
-        |> Date.from_iso8601
-        |> extend_timeframe?(days_offset)
+        |> Date.from_iso8601()
+        |> (fn({:ok, date}) -> {:ok, Date.to_string(date)} end).()
       _ ->
-        IO.inspect days_offset
-
-        :calendar.local_time()
-        |> IO.inspect
-        |> (fn({date, time}) -> date end).()
-        |> IO.inspect
-        |> Date.from_erl!
-        |> IO.inspect
-        |> Date.add(-days_offset)
+        :not_found
     end
   end
 
-  defp extend_timeframe?({:ok, last_update}, requested_offset) do
-    requested =
-      :calendar.local_time()
-      |> (fn({date, _time}) -> date end).()
-      |> Date.from_erl!
-      |> Date.add(-requested_offset)
-
-
-    case Date.diff(requested, last_update) do
-      true ->
-        Logger.info "Extending offset up to last successful update: " <>
-          "Harvesting every change since #{last_update}."
-        last_update
-      false ->
-        Logger.info "Applying requested offset of #{requested_offset} days: " <>
-          "Harvesting every change since #{requested}."
-        requested
-      default ->
-        IO.inspect default
-    end
-  end
-
-  defp extend_timeframe?({:error, message}, requested_offset) do
-    IO.puts "Failed to parse #{@harvesting_log}:"
-    IO.puts message
-    IO.puts "Using requested offset."
-    :calendar.local_time()
-    |> (fn({date, _time}) -> date end).()
-    |> Date.from_erl!
-    |> Date.add(-requested_offset)
-  end
-
-  defp log_time() do
+  defp write_time_log() do
     file_pid = Writing.open_output_file(@harvesting_log)
 
-    {:ok, out_str} =
+    out_str =
       :calendar.local_time()
       |> (fn({date, _time}) -> date end).()
       |> Date.from_erl!
@@ -188,6 +167,9 @@ defmodule GazetteerDrescher.CLI do
     end
     IO.puts "Options: -t | --target <output path>"
     IO.puts "         -h | --help"
+    IO.puts "         -d | --days <Integer> (Harvests changes within last n days)"
+    IO.puts "         -c | --continue (Harvest everything since last harvest, reads log file in log/ directory)"
+    IO.puts "Options -c and -d are mutually exclusive."
     System.halt(0)
   end
 end

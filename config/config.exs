@@ -18,4 +18,4 @@ config :gazetteer_drescher,
   ],
   gazetteer_base_url: "https://gazetteer.dainst.org",
   cached_place_types: ["continent", "administrative-unit"],
-  harvesting_log: "./log/last_run.log"
+  harvesting_log: "./log/time.log"

@@ -22,7 +22,7 @@ defmodule GazetteerDrescher.Writing do
   end
 
   def write_header() do
-    { output_format, file_pid, _days_offset } = Agent.get(RequestInfo, &(&1))
+    { output_format, file_pid } = Agent.get(RequestInfo, &(&1))
 
     case output_format do
       :json ->
@@ -33,7 +33,7 @@ defmodule GazetteerDrescher.Writing do
   end
 
   def write_footer() do
-    { output_format, file_pid, _days_offset } = Agent.get(RequestInfo, &(&1))
+    { output_format, file_pid } = Agent.get(RequestInfo, &(&1))
 
     case output_format do
       :json ->
@@ -52,7 +52,7 @@ defmodule GazetteerDrescher.Writing do
   Returns: `:ok`
   """
   def write_place(place) do
-    { output_format, file_pid, _days_offset } = Agent.get(RequestInfo, &(&1))
+    { output_format, file_pid } = Agent.get(RequestInfo, &(&1))
     { processed_places } = Agent.get(ProcessingInfo, &(&1))
 
     case output_format do
