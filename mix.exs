@@ -4,11 +4,10 @@ defmodule GazetteerDrescher.Mixfile do
   def project do
     [app: :gazetteer_drescher,
      version: "0.1.0",
-     elixir: "~> 1.3",
+     elixir: "~> 1.6",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps(),
-     escript: escript(),
      docs: [output: "docs"]
    ]
   end
@@ -21,10 +20,6 @@ defmodule GazetteerDrescher.Mixfile do
       applications: [:logger, :httpoison, :poison, :timex ]
       # mod: {GazetteerDrescher, []}
     ]
-  end
-
-  def escript do
-    [ main_module: GazetteerDrescher.CLI ]
   end
 
   # Dependencies can be Hex packages:

@@ -26,15 +26,13 @@ After having installed both Erlang and Elixir, check out the repository, switch 
 
 ### Running the program
 
-#### (1) Using Mix:
-* In the root directory, run `mix run lib/gazetteer_drescher.exs <format> [options]`.
-* This is the easiest way to run the application during development.
+#### (1) Using Docker
 
-#### (2) Compilation using [escript](http://elixir-lang.org/docs/master/mix/Mix.Tasks.Escript.Build.html):
-* In the root directory, run `mix escript.build`.
-* This compiles the application into a single executable called `gazetteer_drescher`.
-* The executable can be started like any command line application: `./gazetteer_drescher <format> [options]`.
-* Any machine that has the Erlang Virtual Machine installed can run the executable.
+TODO
+
+#### (2) Using Mix:
+* In the root directory, run `mix run lib/gazetteer_drescher.exs <format> [options]`.
+* This is the easiest way to work on the application during development.
 
 #### Options
 * `-h | --help` for usage information, including a list of all available `<formats>`.
