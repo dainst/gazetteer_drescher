@@ -17,7 +17,7 @@ defmodule GazetteerDrescher.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     [
-      applications: [:logger, :httpoison, :poison, :timex ]
+      applications: [:logger, :httpoison, :poison ]
       # mod: {GazetteerDrescher, []}
     ]
   end
@@ -35,7 +35,6 @@ defmodule GazetteerDrescher.Mixfile do
     [
       {:httpoison, "~> 1.0"},
       {:poison, "~> 3.1"},
-      {:timex, "~> 3.1"},
       {:ex_doc, "~> 0.16", only: :dev}
     ]
   end

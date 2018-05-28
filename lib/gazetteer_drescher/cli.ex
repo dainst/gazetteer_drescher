@@ -104,8 +104,13 @@ defmodule GazetteerDrescher.CLI do
   end
 
   defp start_harvesting(days_offset) do
-    to    = Timex.today
-    from  = check_date(days_offset)
+    to =
+      :calendar.local_time()
+      |> (fn({date, time}) -> date end).()
+      |> Date.from_erl!
+      |> Date.to_string
+
+    from = check_date(days_offset)
 
     "q=lastChangeDate:[#{from}%20TO%20#{to}]"
     |> GazetteerDrescher.Harvesting.start(@default_batch_size)
@@ -115,25 +120,38 @@ defmodule GazetteerDrescher.CLI do
     case File.read(@harvesting_log) do
       {:ok, content} ->
         content
-        |> Timex.parse("%Y-%m-%dT%H:%M:%S", :strftime)
+        |> Date.from_iso8601
         |> extend_timeframe?(days_offset)
       _ ->
-        Timex.shift(Timex.today, days: -days_offset)
+        IO.inspect days_offset
+
+        :calendar.local_time()
+        |> IO.inspect
+        |> (fn({date, time}) -> date end).()
+        |> IO.inspect
+        |> Date.from_erl!
+        |> IO.inspect
+        |> Date.add(-days_offset)
     end
   end
 
   defp extend_timeframe?({:ok, last_update}, requested_offset) do
+    requested =
+      :calendar.local_time()
+      |> (fn({date, _time}) -> date end).()
+      |> Date.from_erl!
+      |> Date.add(-requested_offset)
 
-    request = Timex.shift(Timex.today, days: -requested_offset)
-    case Timex.before?(last_update, request) do
+
+    case Date.diff(requested, last_update) do
       true ->
         Logger.info "Extending offset up to last successful update: " <>
           "Harvesting every change since #{last_update}."
         last_update
       false ->
         Logger.info "Applying requested offset of #{requested_offset} days: " <>
-          "Harvesting every change since #{request}."
-        request
+          "Harvesting every change since #{requested}."
+        requested
       default ->
         IO.inspect default
     end
@@ -143,14 +161,20 @@ defmodule GazetteerDrescher.CLI do
     IO.puts "Failed to parse #{@harvesting_log}:"
     IO.puts message
     IO.puts "Using requested offset."
-    Timex.shift(Timex.today, days: -requested_offset)
+    :calendar.local_time()
+    |> (fn({date, _time}) -> date end).()
+    |> Date.from_erl!
+    |> Date.add(-requested_offset)
   end
 
   defp log_time() do
     file_pid = Writing.open_output_file(@harvesting_log)
 
-    {:ok, out_str} = Timex.today
-    |> Timex.format("{ISO:Extended}")
+    {:ok, out_str} =
+      :calendar.local_time()
+      |> (fn({date, _time}) -> date end).()
+      |> Date.from_erl!
+      |> Date.to_string
 
     IO.binwrite file_pid, out_str
   end
