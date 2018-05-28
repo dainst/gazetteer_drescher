@@ -13,7 +13,7 @@ config :gazetteer_drescher,
     marc:
     %{
       description: "MARC21 authority record. See http://www.loc.gov/marc/authority/",
-      default_target_file: "./output/gazetteer.marc"
+      default_target_file: "./output/gazetteer.mrc"
     }
   ],
   gazetteer_base_url: "https://gazetteer.dainst.org",
