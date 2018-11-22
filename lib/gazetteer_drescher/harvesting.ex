@@ -7,7 +7,6 @@ defmodule GazetteerDrescher.Harvesting do
   @user_agent {"User-agent", "Elixir GazetteerDrescher"}
   @gazetteer_base_url Application.get_env(:gazetteer_drescher, :gazetteer_base_url)
   @cache_config Application.get_env(:gazetteer_drescher, :cached_place_types)
-  @batch_limit Application.get_env(:gazetteer_drescher, :batch_limit)
 
   @doc """
   Starts harvesting with a given search query string and batch size.

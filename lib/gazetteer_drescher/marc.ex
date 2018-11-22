@@ -28,14 +28,14 @@ defmodule GazetteerDrescher.MARC do
       tag: 24,
       i1: "7",
       subfields: [
-        "a": place["gazId"],
+        a: place["gazId"],
         "2": "iDAI.gazetteer"
       ]})
 
     record = Record.add_field(record, %Field{
       tag: 40,
       subfields: [
-        "a": "iDAI.gazetteer"
+        a: "iDAI.gazetteer"
       ]})
 
     record = Record.add_field(record, %Field{
@@ -97,7 +97,7 @@ defmodule GazetteerDrescher.MARC do
         record = record
         |> Record.add_field(%Field{
           tag: 551,
-          subfields: get_X51_subfield(parent["prefName"]) ++ [ "i": "part of" ]
+          subfields: get_X51_subfield(parent["prefName"]) ++ [ i: "part of" ]
           })
         add_parent_tracing(record, parent["parent"])
     end
@@ -117,9 +117,9 @@ defmodule GazetteerDrescher.MARC do
 
   defp get_X51_subfield(item) do
     if item["language"] == nil or item["language"] == "" do
-      [ "a": item["title"] ]
+      [ a: item["title"] ]
     else
-      [ "a": item["title"], "l": item["language"] ]
+      [ a: item["title"], l: item["language"] ]
     end
   end
 end
