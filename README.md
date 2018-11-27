@@ -1,3 +1,6 @@
+# Deprecated 
+See: https://github.com/dainst/marc_authority_harvester
+
 # gazetteer_drescher
 Harvesting application [(Documentation)](https://dainst.github.io/gazetteer_drescher/api-reference.html) for the 
 [iDAI.gazetteer](https://gazetteer.dainst.org/),
